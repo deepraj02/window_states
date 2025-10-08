@@ -164,6 +164,18 @@ class TransitionService {
     }
   }
 
+  Future<Offset?> getCurrentWindowPosition() async {
+    if (!isDesktop) return null;
+
+    try {
+      final windowInfo = await windowManager.getBounds();
+      return Offset(windowInfo.left, windowInfo.top);
+    } catch (e) {
+      debugPrint('Error getting window position: $e');
+      return null;
+    }
+  }
+
   Future<Size> getScreenSize() async {
     if (!isDesktop) return Size.zero;
 
@@ -334,7 +346,10 @@ class _TransitionManagerState extends State<TransitionManager>
 
       final fromSize = _resolvedSizes[previousIndex];
       final toSize = _resolvedSizes[targetIndex];
-      final fromPosition = _resolvedPositions[previousIndex];
+      // Get the current window position instead of using the pre-calculated position
+      final currentPosition = await _transitionService
+          .getCurrentWindowPosition();
+      final fromPosition = currentPosition ?? _resolvedPositions[previousIndex];
       final toPosition = _resolvedPositions[targetIndex];
 
       final isExpanding =
