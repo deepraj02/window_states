@@ -1,3 +1,11 @@
+
+## [0.1.1](https://github.com/yourusername/window_states/releases/tag/v0.1.1) - 2025-10-08
+
+### Fixes
+- **Window Transitions**: Fixed animations to start from the window's actual current position rather than its configured position. This creates smoother transitions when the window has been manually moved before switching states.
+
+
+
 ## [0.1.0](https://github.com/yourusername/window_states/releases/tag/v0.1.0) - 2025-10-08
 
 ### 🎉 Initial Release
