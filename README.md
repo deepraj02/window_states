@@ -385,6 +385,12 @@ TransitionManager.navigateToIndex(
 ## Examples:
 ### [Pomodoro Timer](/example/lib/main.dart) - A simple Pomodoro Timer with Multiple Window Dimensions with a way to navigate in between them.
 
+<p align="center">
+  <video width="820" height="460" controls>
+    <source src="assets/window_states_demo.mp4" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+</p>
 Uses:
 
 - [window_manager](https://pub.dev/packages/window_manager) for window control
