@@ -1,11 +1,12 @@
 name: window_states
 description: Effortless Window State Transitions for Flutter Desktop
-version: 0.1.0+1
+version: 0.1.0
+repository: https://github.com/deepraj02/window_states
 
 
 environment:
   sdk: ^3.8.1
-  flutter: ^3.32.0
+  flutter: ">=3.32.0"
 
 dependencies:
   flutter:
