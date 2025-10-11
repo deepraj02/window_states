@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 typedef CustomPositionCalculator =
@@ -271,4 +273,45 @@ class _NoShadow extends WindowShadow {
 
   @override
   bool get isEnabled => false;
+}
+
+/// Supported desktop platforms for window management
+enum DesktopPlatform {
+  windows,
+  macos,
+  linux;
+
+  /// Check if the current platform matches this enum value
+  bool get isCurrent {
+    switch (this) {
+      case DesktopPlatform.windows:
+        return Platform.isWindows;
+      case DesktopPlatform.macos:
+        return Platform.isMacOS;
+      case DesktopPlatform.linux:
+        return Platform.isLinux;
+    }
+  }
+
+  /// Check if any of the given platforms match the current platform
+  static bool isAnyOf(List<DesktopPlatform> platforms) {
+    return platforms.any((platform) => platform.isCurrent);
+  }
+
+  /// Common platform combinations
+  static const List<DesktopPlatform> all = [
+    DesktopPlatform.windows,
+    DesktopPlatform.macos,
+    DesktopPlatform.linux,
+  ];
+
+  static const List<DesktopPlatform> windowsAndLinux = [
+    DesktopPlatform.windows,
+    DesktopPlatform.linux,
+  ];
+
+  static const List<DesktopPlatform> unixLike = [
+    DesktopPlatform.macos,
+    DesktopPlatform.linux,
+  ];
 }

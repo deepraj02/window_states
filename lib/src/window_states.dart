@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:screen_retriever/screen_retriever.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:window_states/src/utils/transition_utils.dart';
+import 'package:window_states/src/utils/window_initializer.dart';
 
 class TransitionController extends ChangeNotifier {
   int _currentViewIndex = 0;
@@ -32,6 +33,108 @@ class TransitionController extends ChangeNotifier {
   }
 }
 
+class TransitionService {
+  final List<DesktopPlatform> enabledPlatforms;
+  final bool isDesktop =
+      Platform.isWindows || Platform.isMacOS || Platform.isLinux;
+
+  TransitionService({this.enabledPlatforms = DesktopPlatform.all});
+  bool get isPlatformEnabled => DesktopPlatform.isAnyOf(enabledPlatforms);
+  bool get isAvailable => isDesktop && isPlatformEnabled;
+
+  Future<void> animateWindowTransition({
+    required Size fromSize,
+    required Size toSize,
+    required Offset fromPosition,
+    required Offset toPosition,
+    required AnimationConfig animConfig,
+    required bool isExpanding,
+  }) async {
+    if (!isAvailable) return;
+
+    await windowManager.setResizable(true);
+    await windowManager.setMinimumSize(const Size(100, 100));
+    await windowManager.setMaximumSize(const Size(10000, 10000));
+
+    for (int i = 1; i <= animConfig.steps; i++) {
+      final t = i / animConfig.steps;
+      final curvedT = isExpanding ? 1 - pow(1 - t, 3) : pow(t, 2).toDouble();
+
+      final intermediateWidth =
+          fromSize.width + (toSize.width - fromSize.width) * curvedT;
+      final intermediateHeight =
+          fromSize.height + (toSize.height - fromSize.height) * curvedT;
+      final intermediateX =
+          fromPosition.dx + (toPosition.dx - fromPosition.dx) * curvedT;
+      final intermediateY =
+          fromPosition.dy + (toPosition.dy - fromPosition.dy) * curvedT;
+
+      await Future.wait([
+        windowManager.setSize(
+          Size(intermediateWidth, intermediateHeight),
+          animate: false,
+        ),
+        windowManager.setPosition(
+          Offset(intermediateX, intermediateY),
+          animate: false,
+        ),
+      ]);
+
+      await Future.delayed(animConfig.stepDuration);
+    }
+  }
+
+  Future<Size> getScreenSize() async {
+    if (!isDesktop) {
+      return const Size(1920, 1080);
+    }
+    final display = await screenRetriever.getPrimaryDisplay();
+    return display.size;
+  }
+
+  Future<Size> resolveSize(Size configuredSize, Size screenSize) async {
+    if (configuredSize.width <= 1.0 || configuredSize.height <= 1.0) {
+      return Size(
+        configuredSize.width <= 1.0
+            ? screenSize.width * configuredSize.width
+            : configuredSize.width,
+        configuredSize.height <= 1.0
+            ? screenSize.height * configuredSize.height
+            : configuredSize.height,
+      );
+    }
+    return configuredSize;
+  }
+
+  Future<void> applyWindowConfiguration({
+    required Size size,
+    required Offset position,
+    required bool resizable,
+    required bool alwaysOnTop,
+    required WindowShadow shadow,
+  }) async {
+    if (!isDesktop) return;
+
+    await Future.wait([
+      windowManager.setSize(size, animate: false),
+      windowManager.setPosition(position, animate: false),
+      windowManager.setResizable(resizable),
+      windowManager.setAlwaysOnTop(alwaysOnTop),
+      windowManager.setHasShadow(shadow.isEnabled),
+    ]);
+  }
+
+  Future<Offset?> getCurrentWindowPosition() async {
+    if (!isDesktop) return null;
+    try {
+      return await windowManager.getPosition();
+    } catch (e) {
+      debugPrint('Error getting current window position: $e');
+      return null;
+    }
+  }
+}
+
 class TransitionManager extends StatefulWidget {
   final TransitionController controller;
   final List<ViewEntry> views;
@@ -39,6 +142,8 @@ class TransitionManager extends StatefulWidget {
   final Widget? loadingWidget;
   final AnimationConfig defaultAnimationConfig;
   final TransitionService? transitionService;
+  final WindowInitializerConfig? windowInitializerConfig;
+  final List<DesktopPlatform> enabledPlatforms;
 
   const TransitionManager({
     super.key,
@@ -48,6 +153,8 @@ class TransitionManager extends StatefulWidget {
     this.loadingWidget,
     this.defaultAnimationConfig = AnimationConfig.defaultConfig,
     this.transitionService,
+    this.windowInitializerConfig,
+    this.enabledPlatforms = DesktopPlatform.all,
   }) : assert(views.length > 0, 'At least one view is required');
 
   @override
@@ -84,125 +191,6 @@ class TransitionManager extends StatefulWidget {
   }
 }
 
-class TransitionService {
-  final bool isDesktop =
-      Platform.isWindows || Platform.isMacOS || Platform.isLinux;
-
-  Future<void> animateWindowTransition({
-    required Size fromSize,
-    required Size toSize,
-    required Offset fromPosition,
-    required Offset toPosition,
-    required AnimationConfig animConfig,
-    required bool isExpanding,
-  }) async {
-    if (!isDesktop) return;
-
-    await windowManager.setResizable(true);
-    await windowManager.setMinimumSize(const Size(100, 100));
-    await windowManager.setMaximumSize(const Size(10000, 10000));
-
-    for (int i = 1; i <= animConfig.steps; i++) {
-      final t = i / animConfig.steps;
-      final curvedT = isExpanding ? 1 - pow(1 - t, 3) : pow(t, 2).toDouble();
-
-      final intermediateWidth =
-          fromSize.width + (toSize.width - fromSize.width) * curvedT;
-      final intermediateHeight =
-          fromSize.height + (toSize.height - fromSize.height) * curvedT;
-      final intermediateX =
-          fromPosition.dx + (toPosition.dx - fromPosition.dx) * curvedT;
-      final intermediateY =
-          fromPosition.dy + (toPosition.dy - fromPosition.dy) * curvedT;
-
-      await Future.wait([
-        windowManager.setSize(
-          Size(intermediateWidth, intermediateHeight),
-          animate: false,
-        ),
-        windowManager.setPosition(
-          Offset(intermediateX, intermediateY),
-          animate: false,
-        ),
-      ]);
-
-      await Future.delayed(animConfig.stepDuration);
-    }
-  }
-
-  Future<void> applyWindowConfiguration({
-    required Size size,
-    required Offset position,
-    required bool resizable,
-    required bool alwaysOnTop,
-    required WindowShadow shadow,
-  }) async {
-    if (!isDesktop) return;
-
-    await windowManager.setResizable(true);
-    await windowManager.setMinimumSize(const Size(100, 100));
-    await windowManager.setMaximumSize(const Size(10000, 10000));
-
-    await Future.wait([
-      windowManager.setSize(size, animate: false),
-      windowManager.setPosition(position, animate: false),
-    ]);
-
-    // Apply shadow setting (works on macOS and Windows with frameless windows)
-    try {
-      await windowManager.setHasShadow(shadow.isEnabled);
-    } catch (e) {
-      debugPrint('Shadow setting not supported on this platform: $e');
-    }
-
-    await windowManager.setAlwaysOnTop(alwaysOnTop);
-    await windowManager.setResizable(resizable);
-
-    if (!resizable) {
-      await windowManager.setMinimumSize(size);
-      await windowManager.setMaximumSize(size);
-    }
-  }
-
-  Future<Offset?> getCurrentWindowPosition() async {
-    if (!isDesktop) return null;
-
-    try {
-      final windowInfo = await windowManager.getBounds();
-      return Offset(windowInfo.left, windowInfo.top);
-    } catch (e) {
-      debugPrint('Error getting window position: $e');
-      return null;
-    }
-  }
-
-  Future<Size> getScreenSize() async {
-    if (!isDesktop) return Size.zero;
-
-    try {
-      final primaryDisplay = await screenRetriever.getPrimaryDisplay();
-      return primaryDisplay.size;
-    } catch (e) {
-      debugPrint('Error getting screen size: $e');
-      return const Size(1920, 1080);
-    }
-  }
-
-  Future<Size> resolveSize(Size configuredSize, Size screenSize) async {
-    if (configuredSize.width <= 1.0 || configuredSize.height <= 1.0) {
-      return Size(
-        configuredSize.width <= 1.0
-            ? screenSize.width * configuredSize.width
-            : configuredSize.width,
-        configuredSize.height <= 1.0
-            ? screenSize.height * configuredSize.height
-            : configuredSize.height,
-      );
-    }
-    return configuredSize;
-  }
-}
-
 class _TransitionManagerState extends State<TransitionManager>
     with SingleTickerProviderStateMixin {
   bool _initialized = false;
@@ -212,6 +200,10 @@ class _TransitionManagerState extends State<TransitionManager>
   final List<Size> _resolvedSizes = [];
   final List<Offset> _resolvedPositions = [];
   late Size _screenSize;
+
+  bool get _isPlatformEnabled {
+    return DesktopPlatform.isAnyOf(widget.enabledPlatforms);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -252,9 +244,9 @@ class _TransitionManagerState extends State<TransitionManager>
   @override
   void initState() {
     super.initState();
-
-    _transitionService = widget.transitionService ?? TransitionService();
-
+    _transitionService =
+        widget.transitionService ??
+        TransitionService(enabledPlatforms: widget.enabledPlatforms);
     widget.controller._setTotalViews(widget.views.length);
     widget.controller._setCurrentViewIndex(widget.initialViewIndex);
 
@@ -268,13 +260,16 @@ class _TransitionManagerState extends State<TransitionManager>
       curve: widget.defaultAnimationConfig.curve,
     );
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _initialize();
-    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _initialize());
   }
 
   Future<void> _initialize() async {
-    if (!_transitionService.isDesktop) {
+    if (!_transitionService.isDesktop || !_isPlatformEnabled) {
+      if (!_isPlatformEnabled) {
+        debugPrint(
+          'TransitionManager: Current platform not in enabledPlatforms, skipping initialization',
+        );
+      }
       setState(() => _initialized = true);
       return;
     }
@@ -282,7 +277,6 @@ class _TransitionManagerState extends State<TransitionManager>
     try {
       _screenSize = await _transitionService.getScreenSize();
 
-      // Resolve all view configurations
       for (var entry in widget.views) {
         final config = entry.config;
         final resolvedSize = await _transitionService.resolveSize(
@@ -298,15 +292,46 @@ class _TransitionManagerState extends State<TransitionManager>
         _resolvedPositions.add(resolvedPosition);
       }
 
-      // Apply initial window configuration
-      final initialConfig = widget.views[widget.initialViewIndex].config;
-      await _transitionService.applyWindowConfiguration(
-        size: _resolvedSizes[widget.initialViewIndex],
-        position: _resolvedPositions[widget.initialViewIndex],
-        resizable: initialConfig.resizable,
-        alwaysOnTop: initialConfig.alwaysOnTop,
-        shadow: initialConfig.shadow,
-      );
+      try {
+        if (!WindowStatesInitializer.isInitialized) {
+          debugPrint(
+            'TransitionManager: Auto-initializing window with view configuration',
+          );
+          await WindowStatesInitializer.initializeWithViews(
+            views: widget.views,
+            initialViewIndex: widget.initialViewIndex,
+            config:
+                widget.windowInitializerConfig ??
+                const WindowInitializerConfig(),
+            enabledPlatforms: widget.enabledPlatforms,
+          );
+        }
+
+        // applies the complete initial view configuration with calculated position
+        final initialConfig = widget.views[widget.initialViewIndex].config;
+        final initialSize = _resolvedSizes[widget.initialViewIndex];
+        final initialPosition = _resolvedPositions[widget.initialViewIndex];
+
+        debugPrint(
+          'TransitionManager: Applying initial view configuration - '
+          'Size: $initialSize, Position: $initialPosition, '
+          'AlwaysOnTop: ${initialConfig.alwaysOnTop}, '
+          'Resizable: ${initialConfig.resizable}',
+        );
+
+        await _transitionService.applyWindowConfiguration(
+          size: initialSize,
+          position: initialPosition,
+          resizable: initialConfig.resizable,
+          alwaysOnTop: initialConfig.alwaysOnTop,
+          shadow: initialConfig.shadow,
+        );
+
+        await windowManager.show();
+        await windowManager.focus();
+      } catch (e) {
+        rethrow;
+      }
 
       if (mounted) {
         setState(() => _initialized = true);
@@ -334,7 +359,6 @@ class _TransitionManagerState extends State<TransitionManager>
 
     widget.controller._setTransitioning(true);
     final previousIndex = widget.controller.currentViewIndex;
-
     final targetConfig = widget.views[targetIndex].config;
     final effectiveAnimConfig =
         animationConfig ??
@@ -346,6 +370,7 @@ class _TransitionManagerState extends State<TransitionManager>
 
       final fromSize = _resolvedSizes[previousIndex];
       final toSize = _resolvedSizes[targetIndex];
+
       // Get the current window position instead of using the pre-calculated position
       final currentPosition = await _transitionService
           .getCurrentWindowPosition();
@@ -360,9 +385,10 @@ class _TransitionManagerState extends State<TransitionManager>
         _transitionController.forward();
       } else {
         _transitionController.reverse();
-        await Future.delayed(const Duration(milliseconds: 50));
-        widget.controller._setCurrentViewIndex(targetIndex);
       }
+
+      await Future.delayed(const Duration(milliseconds: 50));
+      widget.controller._setCurrentViewIndex(targetIndex);
 
       await _transitionService.animateWindowTransition(
         fromSize: fromSize,
