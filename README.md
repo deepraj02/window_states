@@ -55,6 +55,12 @@ TransitionManager(
         shadow: WindowShadow.none,
       ),
     ),
+    // No need to explicitly initialize the windowManager package now
+    // WindowInitializerConfig automatically picks up the default Size and configs from the `TransitionManager's initialViewIndex` and applies the config.
+      windowInitializerConfig: WindowInitializerConfig(),
+    // You can also explicitly configure the platforms from the `DesktopPlatform` enum, which applies the TransitionManager configs 
+    // to only the mentioned platforms. 
+      enabledPlatforms: DesktopPlatform.unixLike,
   ],
 );
 
@@ -62,6 +68,16 @@ TransitionManager(
 TransitionManager.navigateToIndex(context, 1);
 // 🎉 Automatic smooth animation, window resizing, and UI transition!
 ```
+
+## Examples:
+### [Pomodoro Timer](/example/lib/main.dart) - A simple Pomodoro Timer with Multiple Window Dimensions with a way to navigate in between them.
+
+<p align="center">
+  <video width="820" height="460" controls>
+    <source src="https://res.cloudinary.com/dfwpxrndh/video/upload/v1760206250/window_states_demo_dv9rgn.mp4" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+</p>
 
 
 ## 🚀 Key Features
@@ -382,15 +398,9 @@ TransitionManager.navigateToIndex(
 - **Shadow Limitations** - Custom shadow parameters stored but not yet applied (waiting for window_manager API support)
 - **No Mid-Transition Cancellation** - Transitions must complete before starting another
 
-## Examples:
-### [Pomodoro Timer](/example/lib/main.dart) - A simple Pomodoro Timer with Multiple Window Dimensions with a way to navigate in between them.
 
-<p align="center">
-  <video width="820" height="460" controls>
-    <source src="assets/window_states_demo.mp4" type="video/mp4">
-    Your browser does not support the video tag.
-  </video>
-</p>
+
+
 Uses:
 
 - [window_manager](https://pub.dev/packages/window_manager) for window control
