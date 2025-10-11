@@ -1,32 +1,32 @@
-import 'dart:io' show Platform;
-
 import 'package:example/pages/collapsed_screen.dart';
 import 'package:example/pages/extended_screen.dart';
 import 'package:example/utils/timer_controller.dart';
 import 'package:flutter/material.dart';
-import 'package:window_manager/window_manager.dart';
 import 'package:window_states/window_states.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
-    await windowManager.ensureInitialized();
+  // if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+  //   await WindowStatesInitializer.initialize(config: WindowInitializerConfig());
+  // }
+  // if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+  //   await windowManager.ensureInitialized();
 
-    const windowOptions = WindowOptions(
-      size: Size(300, 120),
-      center: true,
-      backgroundColor: Colors.transparent,
-      skipTaskbar: false,
-      titleBarStyle: TitleBarStyle.hidden,
-      fullScreen: false,
-    );
+  //   const windowOptions = WindowOptions(
+  //     size: Size(300, 120),
+  //     center: true,
+  //     backgroundColor: Colors.transparent,
+  //     skipTaskbar: false,
+  //     titleBarStyle: TitleBarStyle.hidden,
+  //     fullScreen: false,
+  //   );
 
-    await windowManager.waitUntilReadyToShow(windowOptions, () async {
-      await windowManager.show();
-      await windowManager.focus();
-    });
-  }
+  //   await windowManager.waitUntilReadyToShow(windowOptions, () async {
+  //     await windowManager.show();
+  //     await windowManager.focus();
+  //   });
+  // }
 
   runApp(const TimerApp());
 }
@@ -77,7 +77,7 @@ class _TimerHomePageState extends State<TimerHomePage> {
   Widget build(BuildContext context) {
     return TransitionManager(
       controller: _dimensionController,
-      initialViewIndex: 1,
+      initialViewIndex: 0,
       views: [
         ViewEntry(
           view: _collapsedView,
@@ -98,12 +98,14 @@ class _TimerHomePageState extends State<TimerHomePage> {
             position: WindowPosition.centerLeft,
             padding: EdgeInsets.all(30),
             alwaysOnTop: false,
-            shadow: WindowShadow.platformDefault,
+            shadow: WindowShadow.none,
             animationConfig: AnimationConfig.fast(),
           ),
         ),
       ],
       defaultAnimationConfig: const AnimationConfig(),
+      windowInitializerConfig: WindowInitializerConfig(),
+      enabledPlatforms: DesktopPlatform.unixLike,
     );
   }
 
