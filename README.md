@@ -72,13 +72,7 @@ TransitionManager.navigateToIndex(context, 1);
 ## Examples:
 ### [Pomodoro Timer](/example/lib/main.dart) - A simple Pomodoro Timer with Multiple Window Dimensions with a way to navigate in between them.
 
-<p align="center">
-  <video width="820" height="460" controls>
-    <source src="https://res.cloudinary.com/dfwpxrndh/video/upload/v1760206250/window_states_demo_dv9rgn.mp4" type="video/mp4">
-    Your browser does not support the video tag.
-  </video>
-</p>
-
+[![Watch the video](https://img.youtube.com/vi/T-D1KVIuvjA/maxresdefault.jpg)](https://private-user-images.githubusercontent.com/63138398/500185445-3e319012-8d41-47f9-8f79-31af7ee27e00.mov?jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NjAyMDgzNzQsIm5iZiI6MTc2MDIwODA3NCwicGF0aCI6Ii82MzEzODM5OC81MDAxODU0NDUtM2UzMTkwMTItOGQ0MS00N2Y5LThmNzktMzFhZjdlZTI3ZTAwLm1vdj9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNTEwMTElMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjUxMDExVDE4NDExNFomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPTYxYzUxYTY4ZmJiZTNhOGIyZmZmMjNiMDk4YmEzZWM4NzYyOTdhMDg4NzcwYmJkNmQ0MGE3NTJjZDkxZDMzMmQmWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0In0.namfLal5PJW_zhvy6awam_VhM0JW71Q48YrbxVrNcd8)
 
 ## 🚀 Key Features
 
